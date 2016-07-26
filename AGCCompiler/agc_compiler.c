@@ -45,69 +45,88 @@ Syntax:
 		2) an op code or assembler directive;
 		3) an operand (also optional);
 		4) a comment (optional; comments must start with a semicolon)
-The components, if present, must appear in the order given. Each component is
-separated from the next by one or more white spaces or tabs. The only constraint
-is that the label, if present, must start in the 1st column of the line. If no
-label is present, the op code or assembler directive must not start in the 1st
-column, but may appear in any subsequent column.
-The operand may consist of one of the following:
-a) an asterisk (the assembler substitutes in the current value of the
-location counter;
-b) a symbolic name (the assemble substitutes in the value during the
-second pass of the assembly;
-c) a numeric constant. Octal contants must be preceeded by a '%';
-hexadecimal constants are preceeded by a '$'; anything else
-is treated as a decimal.
-d) an expression consisting of one or more of the above, separated by
- the operators: +, -, @ (for multiplication), or / (for division).
-Unary plus or minus is also allowed.
-examples:
-*+2 means location counter plus 2
-LABEL+%10/2
--5
-Assembler Directives:
-The following directives are supported:
-ORG - set the location counter to the operand following ORG.
-EQU - set the label to the operand value.
-DS - define a word of storage; set the value to the operand value.
-CADR - define a word of storage; set the value to the operand value
- (assumed to be a 14-bit address; this is an alias for CADR).
-ADRES - define a word of storage; set the value to the operand value
- (operand is treated as a 12-bit address).
-INCL - inline include a file; the operand contains the filename.
-Addressing:
-The location counter and symbol table always contain the full 14-bit address.
-AGC instructions require a 12-bit address as an operand. Addressing is implemented
-in 1K banks (bits 10 through 1). Bits 12 and 11 select banks 0 (erasable memory),
-1 (fixed-fixed), or 2 (fixed-fixed). These banks are directly addressable in
-12-bits. Banks above 2 are called 'fixed-switchable' and are addressed using
-the BANK register: bits 12 and 11 of the operand are set to '1' and the bank
-register provides the high-order 4 bits (bits 14 through 11) of the address.
-The lower 10 bits of the operand provide the address within the bank.
-Errata:
-The assembler ignores the last line of the source (.asm) file. If the last
-line of your source file contains code, you must add an additional blank
-line to the end of your source file to ensure that your last line of code
-is assembled.
-The symbol table should be sorted before the second pass. The linear
-search through the symbol table should be replaced by a more efficient
-method.
-The assembler directives and syntax don't match those of the original block
-I AGC.
-A macro definition capability would be handy.
- Generates empty .lst and .obj files if the source code file does not exist.
- Incorrectly assigns a zero value to labels that equate to a forward referenced
-label. i.e.:
-LABEL1 EQU LABEL2 ; assembler incorrectly sets LABEL1
-to zero
-LABEL2 EQU *
-The assembler generates object code for eraseable memory addresses.
+
+    The components, if present, must appear in the order given. Each component is
+    separated from the next by one or more white spaces or tabs. The only constraint
+    is that the label, if present, must start in the 1st column of the line. If no
+    label is present, the op code or assembler directive must not start in the 1st
+    column, but may appear in any subsequent column.
+
+    The operand may consist of one of the following:
+        a) an asterisk (the assembler substitutes in the current value of the
+           location counter;
+        b) a symbolic name (the assemble substitutes in the value during the
+           second pass of the assembly;
+        c) a numeric constant. Octal contants must be preceeded by a '%';
+           hexadecimal constants are preceeded by a '$'; anything else
+           is treated as a decimal.
+        d) an expression consisting of one or more of the above, separated by
+           the operators: +, -, @ (for multiplication), or / (for division).
+           Unary plus or minus is also allowed.
+
+    examples:
+        *+2 means location counter plus 2
+        LABEL+%10/2
+        -5
+
+    Assembler Directives:
+
+    The following directives are supported:
+
+        ORG - set the location counter to the operand following ORG.
+        EQU - set the label to the operand value.
+        DS - define a word of storage; set the value to the operand value.
+        CADR - define a word of storage; set the value to the operand value
+               (assumed to be a 14-bit address; this is an alias for CADR).
+        ADRES - define a word of storage; set the value to the operand value
+                (operand is treated as a 12-bit address).
+        INCL - inline include a file; the operand contains the filename.
+
+    Addressing:
+
+    The location counter and symbol table always contain the full 14-bit address.
+    AGC instructions require a 12-bit address as an operand. Addressing is implemented
+    in 1K banks (bits 10 through 1). Bits 12 and 11 select banks 0 (erasable memory),
+    1 (fixed-fixed), or 2 (fixed-fixed). These banks are directly addressable in
+    12-bits. Banks above 2 are called 'fixed-switchable' and are addressed using
+    the BANK register: bits 12 and 11 of the operand are set to '1' and the bank
+    register provides the high-order 4 bits (bits 14 through 11) of the address.
+    The lower 10 bits of the operand provide the address within the bank.
+
+    Errata:
+
+    The assembler ignores the last line of the source (.asm) file. If the last
+    line of your source file contains code, you must add an additional blank
+    line to the end of your source file to ensure that your last line of code
+    is assembled.
+
+    The symbol table should be sorted before the second pass. The linear
+    search through the symbol table should be replaced by a more efficient
+    method.
+
+    The assembler directives and syntax don't match those of the original block
+    I AGC.
+
+    A macro definition capability would be handy.
+ 
+    Generates empty .lst and .obj files if the source code file does not exist.
+
+    Incorrectly assigns a zero value to labels that equate to a forward referenced
+    label. i.e.:
+        LABEL1 EQU LABEL2 ; assembler incorrectly sets LABEL1
+        to zero
+
+        LABEL2 EQU *
+
+    The assembler generates object code for eraseable memory addresses.
 */
+
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <iostream.h>
 #include <stdio.h>
+
 // Create a flag for each memory location in a 14-bit address space
 // These are initialized to false, and then set as the code is assembled.
 // An attempt to assemble code on top of a previously used location is
